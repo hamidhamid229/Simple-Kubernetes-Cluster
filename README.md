@@ -35,7 +35,7 @@ By default, I have used:
 
 pod_network_cidr: "10.244.0.0/16"
 
-It is recommended not to change this value, because it is also used in the CNI (Flannel) configuration. If you change it, you must also update it in the CNI role accordingly.
+It is recommended not to change this value, because it is also used in the CNI (Calico) configuration. If you change it, you must also update it in the CNI role accordingly.
 
 ---
 
