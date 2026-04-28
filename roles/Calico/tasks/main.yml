@@ -14,7 +14,7 @@
   command: kubectl apply -f /tmp/calico.yaml
   register: apply_result
 
-# 🔥 مهم‌ترین بخش اضافه شده
+
 - name: Wait for Calico CRDs to be ready
   shell: kubectl get crd ippools.crd.projectcalico.org
   register: crd_check
