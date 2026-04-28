@@ -1,0 +1,51 @@
+- name: Download Calico manifest on master
+  get_url:
+    url: https://raw.githubusercontent.com/projectcalico/calico/v3.31.3/manifests/calico.yaml
+    dest: /tmp/calico.yaml
+    mode: '0644'
+
+- name: Ensure CIDR is correct in Calico manifest
+  replace:
+    path: /tmp/calico.yaml
+    regexp: '192.168.0.0/16'
+    replace: '10.244.0.0/16'
+
+- name: Apply Calico manifest
+  command: kubectl apply -f /tmp/calico.yaml
+  register: apply_result
+
+# 🔥 مهم‌ترین بخش اضافه شده
+- name: Wait for Calico CRDs to be ready
+  shell: kubectl get crd ippools.crd.projectcalico.org
+  register: crd_check
+  retries: 20
+  delay: 5
+  until: crd_check.rc == 0
+
+- name: Create Calico IPPool
+  shell: |
+    kubectl apply -f - <<EOF
+    apiVersion: crd.projectcalico.org/v1
+    kind: IPPool
+    metadata:
+      name: default-ipv4-ippool
+    spec:
+      cidr: 10.244.0.0/16
+      ipipMode: Always
+      natOutgoing: true
+      disabled: false
+    EOF
+
+- name: Wait for Calico DaemonSet rollout
+  shell: kubectl -n kube-system rollout status ds/calico-node
+  register: rollout
+  retries: 30
+  delay: 10
+  until: rollout.rc == 0
+
+- name: Wait for CoreDNS recovery
+  shell: kubectl -n kube-system rollout status deploy/coredns
+  register: coredns
+  retries: 30
+  delay: 10
+  until: coredns.rc == 0

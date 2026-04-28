@@ -1,0 +1,42 @@
+---
+- name: Install dependencies
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: yes
+
+- name: Add Kubernetes apt key
+  ansible.builtin.apt_key:
+    url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+    state: present
+
+- name: Remove old Kubernetes repo (if exists)
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/kubernetes.list
+    state: absent
+
+- name: Add Kubernetes repo
+  ansible.builtin.apt_repository:
+    repo: "deb https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
+    state: present
+    filename: kubernetes
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install kube components
+  ansible.builtin.apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+
+- name: Enable kubelet
+  ansible.builtin.service:
+    name: kubelet
+    enabled: true

@@ -1,0 +1,17 @@
+- name: Prepare nodes
+  hosts: all
+  roles:
+    - common
+    - containerd
+    - kubernetes
+
+- name: Setup master
+  hosts: masters
+  roles:
+    - master
+    - cilium
+
+- name: Join workers
+  hosts: workers
+  roles:
+    - worker

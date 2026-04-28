@@ -1,0 +1,28 @@
+---
+- name: Disable swap
+  ansible.builtin.command: swapoff -a
+  changed_when: false
+  when: ansible_swaptotal_mb > 0
+
+- name: Remove swap from fstab
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^.*swap.*$'
+    replace: ''
+
+- name: Load kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - br_netfilter
+    - overlay
+
+- name: Set sysctl params
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: present
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.ipv4.ip_forward

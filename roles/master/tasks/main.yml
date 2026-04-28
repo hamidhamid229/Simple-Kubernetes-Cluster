@@ -1,0 +1,26 @@
+---
+- name: Init cluster
+  ansible.builtin.command: kubeadm init --pod-network-cidr={{ pod_network_cidr }}
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+- name: Create kube dir
+  ansible.builtin.file:
+    path: /home/ubuntu/.kube
+    state: directory
+    owner: ubuntu
+    mode: "0755"
+
+- name: Copy admin config
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ubuntu/.kube/config
+    remote_src: true
+    owner: ubuntu
+    mode: "0600"
+
+- name: Install Flannel network
+  become: true
+  become_user: ubuntu
+  ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+  changed_when: false
